@@ -1,0 +1,22 @@
+OpenID Connect - Authentication
+OAuth2 for Authorization
+
+
+Flow for Authorization code
+1. [ Login with HOV ]
+2. [ Login (with necessary parameters for Authorization) ]
+3. [ Server checks if credential is valid ]
+4. [ Server issues unique authorization code and redirects user to specified redirect_uri  ]
+  Server should store:
+    - user ID
+    - scope of the authorization code
+  The identifier is the code itself
+  This code SHOULD be shortlived (around 10minutes) [Ref: https://stackoverflow.com/questions/42346476/oauth-2-authorization-code-how-long-is-it-valid]
+
+
+Flow for the access token (To be reworked)
+1. [ Client app sents authorization code ]
+2. [ Server validates if code is valid ]
+3. [ Server gives access code ]
+
+
