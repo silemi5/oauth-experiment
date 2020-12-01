@@ -3,7 +3,7 @@ import Koa from 'koa';
 import jwt from 'jsonwebtoken'
 import jws from 'jws'
 import dotenv from 'dotenv'
-import { AuthorizationWhileLoggedInRequest } from '../interface/client'
+import { AuthorizationWhileLoggedInRequest, ClientMetadata } from '../interface/client'
 import { cache } from '../cache'
 import { v5 as uuid } from 'uuid'
 
@@ -84,6 +84,8 @@ async function token(ctx: any){
    * Finally, redirect uri must match with the redirect_uri used to
    *  request for authentication code.
    * 
+   * Reference: https://tools.ietf.org/html/rfc6750
+   * 
    * NOTE: authorization code in the cache must be
    */
   const request: { code: string, client_id: string; client_secret: string; redirect_uri: string;  } = ctx.request.body
@@ -92,7 +94,7 @@ async function token(ctx: any){
   const payload: any = cache.get(request.code)
   if(payload){
     // Dispose the authorization code for security
-    cache.del(request.code)
+    // cache.del(request.code)
 
     const decodedPayload: any = jwt.verify(payload, SECRET_KEY)
 
@@ -100,14 +102,37 @@ async function token(ctx: any){
 
     // Verify if client is the same one who requested the authorization key
     // TODO: find client by its id, match with the client secret (?)
+    const client: ClientMetadata = { // NOTE: this is a placeholder
+      client_name: "CB Apps",
+      client_id: "client_id12121",
+      client_uri: "http://localhost",
+      client_description: "Placeholder client info",
+      client_secret: 'SECRET-CLIENT-HERE',
+      redirect_uris: ['http://localhost:3000', 'http://127.0.0.1:3000', 'https://oauthdebugger.com/debug'],
+      application_type: 'web',
+    }
+
+    // Check if client secret matches
+    if(!(client.client_secret === request.client_secret)) throw new Error("Secret doesn't match!")
 
     // Make sure redirect uri matches
-    // TODO: compare redirecy uris
+    if(!client.redirect_uris?.includes(decodedPayload.redirect_uri)) throw new Error("Redirect URI didn't match!")
 
     // Issue access token here
+    const access_token = jwt.sign({
+      sub: decodedPayload.username, // should be userID instead of username
+      iss: 'https://localhost:3000', // token endpoint
+      aud: decodedPayload.client_id,
+      exp: Math.floor(Date.now() / 1000) + (60 * 60 * 2), //token will be valid for 2 hours 
+      scope: decodedPayload.scope
+    }, SECRET_KEY);
+
+    console.log(access_token);
+
     ctx.body = {
-      token: "access_token_here"
+      token: access_token
     }
+
   } else {
     // Return an error
     ctx.body = "invalid authorization code!"
