@@ -15,8 +15,8 @@ export interface ClientMetadata {
   client_secret_expires_at?: number;
   application_type?: 'web' | 'native' | 'browser' | 'service';
   redirect_uris?: string[];
-  response_types?: [ 'code', 'token' ];
-  grant_types?: [ 'authorization_code' | 'implicit' | 'password' | 'refresh_token' | 'client_credentials' ][];
+  response_types?: string[];
+  grant_types?: [ 'authorization_code' | 'implicit' | 'password' | 'refresh_token' | 'client_credentials' ];
   policy_uri?: string;
 }
 
